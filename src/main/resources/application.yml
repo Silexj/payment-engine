@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: payment-engine
+    datasource:
+      url: jdbc:postgresql://localhost:5432/payment_db
+      username: postgres
+      password: silex
+      driverClassName=org:
+        postgresql:
+          Driver:
+      jpa:
+        hibernate:
+          ddl-auto: validate
+
