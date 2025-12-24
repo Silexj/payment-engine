@@ -23,4 +23,6 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     Optional<Account> findByIdWithLock(@Param("id") Long id);
 
     Optional<Account> findByNumber(String number);
+
+    boolean existsByNumber(String number);
 }
