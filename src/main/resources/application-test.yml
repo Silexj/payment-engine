@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: payment-engine-test
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    hibernate:
+      ddl-auto: validate
+
+  flyway:
+    enabled: true
+    clean-disabled: false
+
+  main:
+    banner-mode: off
+
+logging:
+  level:
+    root: INFO
+    com.github.Silexj.payment_engine: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
