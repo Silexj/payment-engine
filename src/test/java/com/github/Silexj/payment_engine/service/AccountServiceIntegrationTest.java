@@ -67,35 +67,26 @@ public class AccountServiceIntegrationTest {
     @Test
     @DisplayName("Should top up balance and create audit transaction")
     void shouldTopUpBalanceAndCreateTransaction() {
-        // 1. Создаем счет
         AccountDto.CreateRequest createReq = new AccountDto.CreateRequest("USD");
         AccountDto.Response accountRes = accountService.createAccount(createReq);
         Long accountId = accountRes.id();
 
-        // 2. Пополняем
         BigDecimal amount = new BigDecimal("100.50");
         AccountDto.TopUpRequest topUpReq = new AccountDto.TopUpRequest(accountId, amount);
 
-        // When
         AccountDto.Response topUpRes = accountService.topUpBalance(topUpReq);
 
-        // Then
-        // Проверка ответа
         assertTrue(amount.compareTo(topUpRes.balance()) == 0, "Response balance should match top-up amount");
 
-        // Проверка БД (Account)
         Account updatedAccount = accountRepository.findById(accountId).orElseThrow();
         assertTrue(amount.compareTo(updatedAccount.getBalance()) == 0, "DB balance should match");
 
-        // Проверка БД (Transaction)
         List<Transaction> transactions = transactionRepository.findAll();
 
-        // Ожидаем ровно 1 транзакцию
         assertEquals(1, transactions.size(), "Should contain exactly 1 transaction");
 
         Transaction tx = transactions.get(0);
 
-        // Проверяем поля транзакции
         assertEquals(accountId, tx.getReceiver().getId(), "Receiver ID mismatch");
         assertNull(tx.getSender(), "Sender should be NULL for TopUp");
         assertTrue(amount.compareTo(tx.getAmount()) == 0, "Transaction amount mismatch");
@@ -108,13 +99,10 @@ public class AccountServiceIntegrationTest {
     void shouldThrowWhenAccountNotFound() {
         AccountDto.TopUpRequest req = new AccountDto.TopUpRequest(999999L, BigDecimal.TEN);
 
-        // В JUnit 5 проверка исключений выглядит так:
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            // Код, который должен упасть
             accountService.topUpBalance(req);
         });
 
-        // Проверяем текст ошибки
         assertEquals("Account not found", exception.getMessage());
     }
 }

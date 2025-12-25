@@ -47,7 +47,7 @@ public class AccountControllerTest {
     }
 
     @Test
-    void shouldReturn400_WhenCurrencyIsBland() throws Exception {
+    void shouldReturn400_WhenCurrencyIsBlank() throws Exception {
         var request = new AccountDto.CreateRequest("");
 
         mockMvc.perform(post("/api/v1/accounts")
