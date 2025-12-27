@@ -1,6 +1,8 @@
 package com.github.Silexj.payment_engine.service;
 
 import com.github.Silexj.payment_engine.dto.AccountDto;
+import com.github.Silexj.payment_engine.dto.event.AccountCreatedEvent;
+import com.github.Silexj.payment_engine.dto.event.BalanceDepositedEvent;
 import com.github.Silexj.payment_engine.model.Account;
 import com.github.Silexj.payment_engine.repository.AccountRepository;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.security.SecureRandom;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +24,7 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final TransactionService transactionService;
     private final SecureRandom secureRandom = new SecureRandom();
+    private final OutboxWriterService outboxWriter;
 
     @Transactional
     public AccountDto.Response createAccount(AccountDto.CreateRequest request) {
@@ -45,6 +50,14 @@ public class AccountService {
 
         account = accountRepository.saveAndFlush(account);
 
+        var event = new AccountCreatedEvent(
+                account.getId(),
+                account.getNumber(),
+                account.getCurrency(),
+                LocalDateTime.now()
+        );
+        outboxWriter.saveEvent(account.getId().toString(), "ACCOUNT_CREATED", event);
+
         log.info("Account created: id={}, number={}", account.getId(), account.getNumber());
         return mapToResponse(account);
     }
@@ -62,6 +75,14 @@ public class AccountService {
         accountRepository.save(account);
 
         transactionService.registerDeposit(account, amount);
+
+        var event = new BalanceDepositedEvent(
+                account.getId(),
+                request.amount(),
+                account.getCurrency(),
+                UUID.randomUUID()
+        );
+        outboxWriter.saveEvent(account.getId().toString(), "BALANCE_DEPOSITED", event);
 
         log.info("Balance topped up successfully: accountId={}", account.getId());
         return mapToResponse(account);

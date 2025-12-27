@@ -1,7 +1,7 @@
 package com.github.Silexj.payment_engine.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.Silexj.payment_engine.dto.TransferCompletedEvent;
+import com.github.Silexj.payment_engine.dto.event.TransferCompletedEvent;
 import com.github.Silexj.payment_engine.dto.TransferDTO;
 import com.github.Silexj.payment_engine.model.Account;
 import com.github.Silexj.payment_engine.model.OutboxEvent;
@@ -26,8 +26,7 @@ public class TransferService {
 
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
-    private final OutboxEventRepository outboxEventRepository;
-    private final ObjectMapper objectMapper;
+    private final OutboxWriterService outboxWriter;
 
     /**
      * Выполняет перевод средств между двумя счетами.
@@ -133,18 +132,10 @@ public class TransferService {
                 transaction.getCurrency()
         );
 
-        String jsonPayload = objectMapper.writeValueAsString(event);
-
-        OutboxEvent outboxEvent = OutboxEvent.builder()
-                .id(UUID.randomUUID())
-                .aggregateType("TRANSACTION")
-                .aggregateId(transaction.getId().toString())
-                .type("TRANSFER_COMPLETED")
-                .payload(jsonPayload)
-                .status("PENDING")
-                .build();
-
-        outboxEventRepository.save(outboxEvent);
+        outboxWriter.saveEvent(
+                transaction.getId().toString(),
+                "TRANSFER_COMPLETED",
+                event
+        );
     }
-
 }

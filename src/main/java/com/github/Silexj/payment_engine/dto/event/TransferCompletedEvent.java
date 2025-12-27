@@ -1,4 +1,4 @@
-package com.github.Silexj.payment_engine.dto;
+package com.github.Silexj.payment_engine.dto.event;
 
 import java.math.BigDecimal;
 import java.util.UUID;
