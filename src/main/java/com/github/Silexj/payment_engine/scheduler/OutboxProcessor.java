@@ -4,12 +4,14 @@ import com.github.Silexj.payment_engine.model.OutboxEvent;
 import com.github.Silexj.payment_engine.repository.OutboxEventRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -41,10 +43,14 @@ public class OutboxProcessor {
 
         for (OutboxEvent event : events) {
             try {
-                String key = event.getAggregateId();
-                String payload = event.getPayload();
+                ProducerRecord<String, String> record = new ProducerRecord<>(
+                        topicName,
+                        event.getAggregateId(),
+                        event.getPayload()
+                );
 
-                kafkaTemplate.send(topicName, key, payload).get();
+                record.headers().add("EVENT_TYPE", event.getType().getBytes(StandardCharsets.UTF_8));
+                kafkaTemplate.send(record).get();
 
                 event.setStatus("PROCESSED");
                 event.setProcessedAt(LocalDateTime.now());
