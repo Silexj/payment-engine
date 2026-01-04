@@ -18,6 +18,13 @@ public class NotificationListener {
 
     private final ObjectMapper objectMapper;
 
+    /**
+     * Основной обработчик входящих сообщений из Kafka.
+     * Реализует десериализацию на основе заголовка EVENT_TYPE
+     * определяет целевой класс события и логику обработки.
+     *
+     * В случае ошибки десериализации или обработки сообщение логируется.
+     */
     @KafkaListener(topics = "${app.kafka.topic-name}", groupId = "notification-group")
     public void handlePaymentEvent(
             @Payload String payload,
@@ -47,6 +54,10 @@ public class NotificationListener {
         }
     }
 
+    /**
+     * Эмулирует отправку уведомлений участникам транзакции.
+     * Отправляет Email получателю средств и Push-уведомление отправителю.
+     */
     private void sendNotification(TransferCompletedEvent event) {
         log.info("[NOTIFICATION] Sending email to Account {}: 'You received {} {} from Account {}'",
                 event.receiverAccountId(),

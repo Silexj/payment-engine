@@ -14,6 +14,14 @@ public class TransferController {
 
     private final TransferService transferService;
 
+    /**
+     * Инициирует операцию перевода средств между счетами.
+     * Метод является идемпотентным: если клиент отправит повторный запрос
+     * с тем же externalId (например, при retry после сбоя сети),
+     * система вернет результат ранее сохраненной транзакции без повторного списания средств.
+     *
+     * Возвращает статус 200 OK< как для новой, так и для идемпотентно возвращенной транзакции.
+     */
     @PostMapping
     @ResponseStatus(HttpStatus.OK)
     public TransferDTO.Response performTransfer(@RequestBody @Valid TransferDTO.PerformRequest request) {

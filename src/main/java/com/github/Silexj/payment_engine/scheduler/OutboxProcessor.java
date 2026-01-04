@@ -27,7 +27,7 @@ public class OutboxProcessor {
     private String topicName;
 
     /**
-     * Этот метод запускается каждые 500мс (как настроено в application.yml).
+     * Этот метод запускается каждые ...ms (настроено в application.yml).
      * Он работает в транзакции: если отправка в Кафку упадет, статус в БД откатится.
      */
     @Scheduled(fixedDelayString = "${app.scheduler.outbox-interval}")

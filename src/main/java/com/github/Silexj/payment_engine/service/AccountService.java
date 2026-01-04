@@ -26,6 +26,10 @@ public class AccountService {
     private final SecureRandom secureRandom = new SecureRandom();
     private final OutboxWriterService outboxWriter;
 
+    /**
+     * Создает новый счет с генерацией уникального номера.
+     * Реализует механизм ретраев (до 3 попыток) для обработки редких коллизий.
+     */
     @Transactional
     public AccountDto.Response createAccount(AccountDto.CreateRequest request) {
         int attempts = 0;
@@ -40,6 +44,10 @@ public class AccountService {
         throw new IllegalStateException("Failed to generate unique account number after 3 attempts");
     }
 
+    /**
+     * Сохраняет сущность и пишет событие в Outbox.
+     * Использует saveAndFlush для мгновенной проверки уникальности номера БД.
+     */
     private AccountDto.Response tryCreateAccount(AccountDto.CreateRequest request) {
         String accountNumber = generateRandomNumberString();
 
@@ -62,6 +70,11 @@ public class AccountService {
         return mapToResponse(account);
     }
 
+    /**
+     * Пополняет баланс счета (Deposit).
+     * Использует пессимистичную блокировку (findByIdWithLock) для исключения Race Conditions.
+     * Атомарно обновляет баланс, пишет историю операций и создает событие BALANCE_DEPOSITED.
+     */
     @Transactional
     public AccountDto.Response topUpBalance(AccountDto.TopUpRequest request) {
         log.info("Processing top-up: {}", request);
@@ -88,6 +101,10 @@ public class AccountService {
         return mapToResponse(account);
     }
 
+    /**
+     * Возвращает информацию о счете.
+     * Использует readOnly транзакцию для оптимизации работы с пулом соединений и БД.
+     */
     @Transactional(readOnly = true)
     public AccountDto.Response getAccount(Long id) {
         return accountRepository.findById(id)
