@@ -21,6 +21,13 @@ public class TransactionService {
 
     private final TransactionRepository transactionRepository;
 
+    /**
+     * Регистрирует операцию пополнения счета (Deposit) в истории.
+     * Sender не указывается (null), так как средства поступают из внешнего источника.
+     *
+     * Требует наличия активной транзакции (MANDATORY), так как метод должен выполняться
+     * атомарно вместе с изменением баланса в AccountService.
+     */
     @Transactional(propagation = Propagation.MANDATORY)
     public void registerDeposit(Account receiver, BigDecimal amount) {
 
