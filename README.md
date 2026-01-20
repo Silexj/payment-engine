@@ -16,6 +16,7 @@
 *   **Transactional Outbox:** Гарантированная доставка событий в Kafka без использования распределенных транзакций.
 *   **Audit Trail:** Полная история всех движений средств.
 *   **Event-Driven:** Асинхронные уведомления через Kafka.
+*   **Observability:** Встроенный мониторинг метрик производительности и бизнес-показателей.
 
 ##  Технический стек
 
@@ -23,31 +24,39 @@
 *   **Framework:** Spring Boot 3 (Data JPA, Web, Kafka)
 *   **Database:** PostgreSQL 15 (Liquibase/Flyway migrations)
 *   **Messaging:** Apache Kafka (KRaft)
+*   **Observability:** Prometheus, Grafana, Micrometer
 *   **Testing:** JUnit 5, Testcontainers (Real DB & Kafka integration tests)
 *   **Ops:** Docker, Docker Compose
 
 ##  Архитектура
 
-### Процесс перевода (Happy Path)
+### Процесс перевода
 1.  **API:** Клиент отправляет POST `/transfers` с `Idempotency-Key`.
 2.  **Locking:** Сервис сортирует ID счетов и захватывает пессимистичные блокировки (`SELECT FOR UPDATE`).
 3.  **Logic:** Проверка баланса -> Обновление балансов -> Запись в `transactions` -> Запись в `outbox_events`. Всё в одной ACID транзакции.
 4.  **Async:** Scheduler вычитывает события из `outbox_events` и пушит в Kafka.
 5.  **Notify:** Consumer читает Kafka и отправляет уведомление.
 
+
+## Monitoring & Observability
+
+Проект предоставляет готовые дашборды для мониторинга в реальном времени.
+
+### Доступ:
+
+*    **Grafana:** http://localhost:3000 (Login: admin / Pass: admin)
+
+*    **Prometheus:** http://localhost:9090
 ## Запуск
 
 Требуется Docker и Java 21.
 
-1.  **Поднятие инфраструктуры:**
-    ```bash
-    docker-compose up -d
-    ```
-
-2.  **Запуск приложения:**
-    ```bash
-    ./gradlew bootRun
-    ```
+1.    **Поднятие инфраструктуры (App + DB + Kafka + Monitoring):**
+```bash
+docker-compose up -d --build
+```
+2.    **Проверка статуса:**
+Приложение доступно по адресу http://localhost:8080.
 
 ## Тестирование
 
