@@ -36,3 +36,20 @@ app:
     outbox-interval: 500
   kafka:
     topic-name: payment-events
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, prometheus, metrics
+  endpoint:
+    health:
+      show-details: always
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: payment-engine
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true

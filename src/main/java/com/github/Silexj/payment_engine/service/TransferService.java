@@ -10,6 +10,9 @@ import com.github.Silexj.payment_engine.model.TransactionStatus;
 import com.github.Silexj.payment_engine.repository.AccountRepository;
 import com.github.Silexj.payment_engine.repository.OutboxEventRepository;
 import com.github.Silexj.payment_engine.repository.TransactionRepository;
+import io.micrometer.core.annotation.Timed;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -28,11 +31,14 @@ public class TransferService {
     private final TransactionRepository transactionRepository;
     private final OutboxWriterService outboxWriter;
 
+    private final MeterRegistry meterRegistry;
+
     /**
      * Выполняет перевод средств между двумя счетами.
      * Гарантирует атомарность и защиту от Deadlock через сортировку ID
      */
     @Transactional
+    @Timed(value = "transfer.perform", description = "Time taken to perform transfer")
     public TransferDTO.Response performTransfer(TransferDTO.PerformRequest request) {
         log.info("Initiating transfer: externalId={}, amount={}", request.externalId(), request.amount());
 
@@ -66,8 +72,12 @@ public class TransferService {
 
         saveOutboxEvent(transaction);
 
-        log.info("Transfer completed successfully: txId={}", transaction.getId());
+        Counter.builder("transfer.amount.total")
+                .description("Total amount of money transferred")
+                .register(meterRegistry)
+                .increment(request.amount().doubleValue());
 
+        log.info("Transfer completed successfully: txId={}", transaction.getId());
         return mapToResponse(transaction);
     }
 

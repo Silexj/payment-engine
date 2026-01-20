@@ -41,6 +41,26 @@ services:
       timeout: 10s
       retries: 5
 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: payment-prometheus
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: payment-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+
   app:
     build: .
     container_name: payment-engine-app
@@ -56,6 +76,8 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/payment_db
       DB_USERNAME: postgres
       DB_PASSWORD: password
+
+
 
 volumes:
   pg_data:
